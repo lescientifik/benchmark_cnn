@@ -2,16 +2,16 @@
 
 ## Architecture
 
-Ce benchmark utilise une implémentation **UNet decoder** standard, basée sur l'architecture originale de Ronneberger et al. (2015), adaptée pour utiliser des encodeurs pré-entraînés de timm.
+This benchmark uses a standard **UNet decoder** implementation, based on the original architecture by Ronneberger et al. (2015), adapted to use pre-trained encoders from timm.
 
-### Paramètres du décodeur
+### Decoder Parameters
 
-| Paramètre | Valeur | Justification |
-|-----------|--------|---------------|
-| `out_indices` | (0, 1, 2, 3, 4) | Tous les niveaux de features (C1-C5) |
-| `decoder_channels` | (256, 128, 64, 32) | Réduction progressive, adapté à l'encoder |
+| Parameter | Value | Justification |
+|-----------|-------|---------------|
+| `out_indices` | (0, 1, 2, 3, 4) | All feature levels (C1-C5) |
+| `decoder_channels` | (256, 128, 64, 32) | Progressive reduction, adapted to encoder |
 | `upsampling` | ConvTranspose2d (stride=2) | Standard UNet |
-| `conv_block` | Double conv 3x3 + BN + ReLU | Bloc UNet classique |
+| `conv_block` | Double conv 3x3 + BN + ReLU | Classic UNet block |
 
 ### Pipeline
 
@@ -31,44 +31,44 @@ Encoder → [C1, C2, C3, C4, C5]
            Final upsample → Seg head → Output
 ```
 
-### Bloc de convolution (ConvBlock)
+### Convolution Block (ConvBlock)
 
 ```python
 Conv2d(in_ch, out_ch, 3, padding=1) → BN → ReLU
 Conv2d(out_ch, out_ch, 3, padding=1) → BN → ReLU
 ```
 
-### Différences avec FPN
+### Differences with FPN
 
 | Aspect | UNet | Semantic FPN |
 |--------|------|--------------|
 | Skip connections | Concatenation | Addition |
-| Traitement | Séquentiel (deep→shallow) | Parallèle puis fusion |
-| Nb de niveaux utilisés | Tous (5) | Principalement P2 |
-| Bloc après fusion | Double conv 3x3 | Simple conv 3x3 |
+| Processing | Sequential (deep→shallow) | Parallel then fusion |
+| Levels used | All (5) | Mainly P2 |
+| Block after fusion | Double conv 3x3 | Simple conv 3x3 |
 
-## Références
+## References
 
 1. **U-Net: Convolutional Networks for Biomedical Image Segmentation**
    - Ronneberger et al., MICCAI 2015
    - https://arxiv.org/abs/1505.04597
-   - Architecture originale
+   - Original architecture
 
 2. **Segmentation Models PyTorch**
    - https://github.com/qubvel/segmentation_models.pytorch
-   - Implémentation de référence avec encodeurs timm
+   - Reference implementation with timm encoders
 
 3. **nnU-Net**
    - Isensee et al., Nature Methods 2021
    - https://github.com/MIC-DKFZ/nnUNet
-   - Version auto-configurée pour médical
+   - Auto-configured version for medical imaging
 
-## Optimisations
+## Optimizations
 
-- `torch.compile()` : Compilation du modèle complet
-- `torch.autocast(device_type="cpu")` : Mixed precision CPU (bfloat16)
-- `torch.inference_mode()` : Mode inférence optimisé
-- Reparamétrisation pour RepVGG/MobileOne
+- `torch.compile()`: Full model compilation
+- `torch.autocast(device_type="cpu")`: CPU mixed precision (bfloat16)
+- `torch.inference_mode()`: Optimized inference mode
+- Reparameterization for RepVGG/MobileOne
 
 ## Benchmark
 

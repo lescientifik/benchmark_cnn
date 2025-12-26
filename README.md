@@ -1,30 +1,30 @@
-# Benchmark CNN - Architectures 2D pour Segmentation Medicale CPU
+# CNN Benchmark - 2D Architectures for Medical Image Segmentation on CPU
 
-Benchmark complet des architectures CNN pour la segmentation d'images medicales sur CPU.
-Ce projet demontre que **MobileNetV4 + FPN/UNet** est le choix optimal pour la segmentation medicale CPU, surpassant les modeles 3D classiques (STU-Net, TotalSegmentator) en throughput tout en etant plus simple a deployer.
+Comprehensive benchmark of CNN architectures for medical image segmentation on CPU.
+This project demonstrates that **MobileNetV4 + FPN/UNet** is the optimal choice for CPU-based medical segmentation, outperforming classic 3D models (STU-Net, TotalSegmentator) in throughput while being simpler to deploy.
 
-## Conclusion principale
+## Main Conclusion
 
-> **MobileNetV4 Small + FPN avec ONNX Runtime FP32 atteint 53 img/s** - le plus rapide de tous les modeles testes, sans quantification et sans risque de perte de precision.
+> **MobileNetV4 Small + FPN with ONNX Runtime FP32 achieves 53 img/s** - the fastest of all tested models, without quantization and with no risk of accuracy loss.
 
-## Resultats cles
+## Key Results
 
-### Champion : MobileNetV4 Small + FPN + ONNX FP32
+### Champion: MobileNetV4 Small + FPN + ONNX FP32
 
-| Metrique | Valeur |
-|----------|--------|
+| Metric | Value |
+|--------|-------|
 | **Throughput** | 53.3 img/s |
-| **Latence** | 18.7 ms |
+| **Latency** | 18.7 ms |
 | **Params (encoder + FPN)** | 2.16 M |
-| **Quantification** | Non necessaire |
+| **Quantization** | Not needed |
 | **Speedup vs baseline** | 1.85x |
 
-### Comparaison 2D vs 3D (segmentation 117 classes)
+### 2D vs 3D Comparison (117-class segmentation)
 
-Benchmark PyTorch baseline (sans optimisations) pour comparaison equitable:
+PyTorch baseline benchmark (no optimizations) for fair comparison:
 
-| Modele | Type | Params (enc+dec) | Throughput | Speedup vs TotalSeg |
-|--------|------|------------------|------------|---------------------|
+| Model | Type | Params (enc+dec) | Throughput | Speedup vs TotalSeg |
+|-------|------|------------------|------------|---------------------|
 | **MNV4 Small + FPN** | 2D | 2.16M | **35.0 img/s** | **5.2x** |
 | **MNV4 Small + UNet** | 2D | 4.32M | 29.3 img/s | 4.4x |
 | MNV4 Medium + FPN | 2D | 8.12M | 28.6 img/s | 4.3x |
@@ -32,40 +32,40 @@ Benchmark PyTorch baseline (sans optimisations) pour comparaison equitable:
 | STU-Net-S | 3D | 14.60M | 11.9 img/s | 1.8x |
 | **TotalSegmentator** | 3D | 31.29M | 6.7 img/s | 1.0x (ref) |
 
-**Les modeles 2D sont 3-5x plus rapides que les references 3D.**
+**2D models are 3-5x faster than 3D references.**
 
-> Avec ONNX Runtime FP32, MobileNetV4 Small + FPN atteint **53 img/s** soit **8x** plus rapide que TotalSegmentator.
+> With ONNX Runtime FP32, MobileNetV4 Small + FPN reaches **53 img/s**, which is **8x** faster than TotalSegmentator.
 
-## Pourquoi MobileNetV4 ?
+## Why MobileNetV4?
 
-### 1. Performance brute exceptionnelle
+### 1. Exceptional Raw Performance
 
-Modeles encoder + FPN avec ONNX Runtime (sans quantification) :
+Encoder + FPN models with ONNX Runtime (no quantization):
 
-| Encoder + FPN | Params (enc+FPN) | ONNX FP32 | ONNX INT8 | Meilleur |
-|---------------|------------------|-----------|-----------|----------|
+| Encoder + FPN | Params (enc+FPN) | ONNX FP32 | ONNX INT8 | Best |
+|---------------|------------------|-----------|-----------|------|
 | **MobileNetV4 Small** | 2.16M | **53.3 img/s** | 38.3 img/s | FP32 |
 | MobileNetV4 Medium | 8.12M | **37.7 img/s** | 34.3 img/s | FP32 |
 | RegNetX-004 | 5.61M | **48.0 img/s** | 35.0 img/s | FP32 |
 | ResNet18 | 12.05M | 29.8 img/s | **38.5 img/s** | INT8 |
 | RepVGG-A0 | 7.99M | 20.4 img/s | **40.8 img/s** | INT8 |
 
-**Observation cle** : MobileNetV4 est plus rapide en FP32 qu'en INT8, contrairement aux autres architectures.
+**Key observation**: MobileNetV4 is faster in FP32 than INT8, unlike other architectures.
 
-### 2. Pas besoin de quantification
+### 2. No Quantization Needed
 
-Les architectures avec convolutions depthwise (MobileNetV4, MobileNetV3) sont connues pour avoir des problemes de precision en INT8 :
+Architectures with depthwise convolutions (MobileNetV4, MobileNetV3) are known to have accuracy issues with INT8:
 
 > "MobileNets often have significant accuracy degradation under post-training quantization."
 > -- [Do All MobileNets Quantize Poorly? (CVPR 2021)](https://arxiv.org/abs/2104.11849)
 
-**Bonne nouvelle** : Avec MobileNetV4, ONNX FP32 est deja le mode le plus rapide ! Aucun risque de degradation de precision.
+**Good news**: With MobileNetV4, ONNX FP32 is already the fastest mode! No risk of accuracy degradation.
 
-### 3. Efficacite parametres/vitesse
+### 3. Parameter/Speed Efficiency
 
-Modeles encoder + FPN (torch.compile + autocast):
+Encoder + FPN models (torch.compile + autocast):
 
-| Encoder + FPN | Params (enc+FPN) | Throughput | Efficacite (img/s/M) |
+| Encoder + FPN | Params (enc+FPN) | Throughput | Efficiency (img/s/M) |
 |---------------|------------------|------------|----------------------|
 | **MobileNetV4 Small** | 2.15M | 93.6 img/s | **43.5** |
 | MobileOne S0 | 1.98M | 98.3 img/s | 49.6 |
@@ -73,25 +73,25 @@ Modeles encoder + FPN (torch.compile + autocast):
 | MobileNetV3 Small | 1.75M | 55.0 img/s | 31.4 |
 | ResNet18 | 12.04M | 34.8 img/s | 2.9 |
 
-MobileNetV4 offre le meilleur compromis entre taille, vitesse et compatibilite ONNX.
+MobileNetV4 offers the best trade-off between size, speed, and ONNX compatibility.
 
-### 4. Architecture moderne optimisee CPU
+### 4. Modern CPU-Optimized Architecture
 
-MobileNetV4 (ECCV 2024) introduit :
-- **Universal Inverted Bottleneck (UIB)** : bloc flexible optimise par NAS
-- **Analyse Roofline** : optimise pour tous types de hardware (CPU, GPU, TPU)
-- **~2x plus rapide** que MobileNetV3 a precision egale
+MobileNetV4 (ECCV 2024) introduces:
+- **Universal Inverted Bottleneck (UIB)**: Flexible NAS-optimized block
+- **Roofline Analysis**: Optimized for all hardware types (CPU, GPU, TPU)
+- **~2x faster** than MobileNetV3 at equal accuracy
 
-## Benchmarks detailles
+## Detailed Benchmarks
 
-### Encodeurs seuls (512x512, CPU)
+### Encoders Only (512x512, CPU)
 
-Top 10 par efficacite (throughput / params).
+Top 10 by efficiency (throughput / params).
 
-> **Note** : Les params incluent le head de classification. Pour la segmentation, seul le backbone est utilise (~1.5M de moins).
+> **Note**: Params include classification head. For segmentation, only the backbone is used (~1.5M less).
 
-| Rang | Modele | Params (avec head) | Throughput | Efficacite |
-|------|--------|-------------------|------------|------------|
+| Rank | Model | Params (with head) | Throughput | Efficiency |
+|------|-------|-------------------|------------|------------|
 | 1 | MobileOne S0 | 2.08M | 259.6 img/s | 124.9 |
 | 2 | RegNetX-002 | 2.68M | 230.2 img/s | 85.7 |
 | 3 | MobileNetV3 Small | 2.54M | 186.1 img/s | 73.2 |
@@ -105,141 +105,141 @@ Top 10 par efficacite (throughput / params).
 
 ### Encoder + FPN (Semantic FPN)
 
-Avec `torch.compile` + `autocast` (bf16):
+With `torch.compile` + `autocast` (bf16):
 
-| Encoder | Params (enc+FPN) | Throughput | Memoire |
-|---------|------------------|------------|---------|
+| Encoder | Params (enc+FPN) | Throughput | Memory |
+|---------|------------------|------------|--------|
 | MobileOne S0 | 1.98M | 98.3 img/s | 7.5 MB |
 | **MobileNetV4 Small** | 2.15M | 93.6 img/s | 8.2 MB |
 | RegNetX-002 | 3.13M | 89.5 img/s | 11.9 MB |
 | MobileNetV4 Medium | 8.10M | 57.7 img/s | 30.9 MB |
 | ResNet18 | 12.04M | 34.8 img/s | 45.9 MB |
 
-> FPN ajoute ~0.8-1.0M parametres au backbone de l'encodeur.
+> FPN adds ~0.8-1.0M parameters to the encoder backbone.
 
 ### Encoder + UNet
 
-Avec `torch.compile` + `autocast` (bf16):
+With `torch.compile` + `autocast` (bf16):
 
-| Encoder | Params (enc+UNet) | Throughput | Memoire |
-|---------|-------------------|------------|---------|
+| Encoder | Params (enc+UNet) | Throughput | Memory |
+|---------|-------------------|------------|--------|
 | MobileNetV3 Small | 3.41M | 75.0 img/s | 13.0 MB |
 | **MobileNetV4 Small** | 4.31M | 71.1 img/s | 16.5 MB |
 | MobileOne S0 | 4.63M | 66.6 img/s | 17.6 MB |
 | MobileNetV4 Medium | 10.43M | 48.5 img/s | 39.8 MB |
 | ResNet18 | 14.24M | 19.9 img/s | 54.3 MB |
 
-> UNet ajoute ~2.5-3.5M parametres au backbone pour meilleure segmentation fine.
+> UNet adds ~2.5-3.5M parameters to the backbone for better fine segmentation.
 
-### Quantification ONNX (encoder + FPN)
+### ONNX Quantization (encoder + FPN)
 
-| Encoder + FPN | Best Mode | Throughput | Pourquoi |
-|---------------|-----------|------------|----------|
-| **MobileNetV4 Small** | ONNX FP32 | 53.3 img/s | Depthwise conv optimise dans ONNX |
-| **RegNetX-004** | ONNX FP32 | 48.0 img/s | Group conv optimise dans ONNX |
-| ResNet18 | ONNX INT8 | 38.5 img/s | Conv standard beneficie de INT8 |
-| RepVGG-A0 | ONNX INT8 | 40.8 img/s | Conv 3x3 simple beneficie de INT8 |
+| Encoder + FPN | Best Mode | Throughput | Why |
+|---------------|-----------|------------|-----|
+| **MobileNetV4 Small** | ONNX FP32 | 53.3 img/s | Depthwise conv optimized in ONNX |
+| **RegNetX-004** | ONNX FP32 | 48.0 img/s | Group conv optimized in ONNX |
+| ResNet18 | ONNX INT8 | 38.5 img/s | Standard conv benefits from INT8 |
+| RepVGG-A0 | ONNX INT8 | 40.8 img/s | Simple conv3x3 benefits from INT8 |
 
-**ONNX Runtime bat torch.compile pour toutes les architectures (+33-40%).**
+**ONNX Runtime beats torch.compile for all architectures (+33-40%).**
 
-## Recommandations par cas d'usage
+## Recommendations by Use Case
 
-| Priorite | Modele (enc+dec) | Throughput | Params (enc+dec) | Notes |
-|----------|------------------|------------|------------------|-------|
-| **Max vitesse** | MNV4 Small + FPN + ONNX FP32 | 53 img/s | 2.16M | Aucun risque precision |
-| **Vitesse + compact** | RegNetX-004 + FPN + ONNX FP32 | 48 img/s | 5.61M | Alternative solide |
-| **Precision prouvee** | ResNet18 + FPN + ONNX INT8 | 38.5 img/s | 12.05M | INT8 stable sur ResNet |
-| **Segmentation fine** | MNV4 Small + UNet + ONNX FP32 | ~45 img/s | 4.31M | Plus de capacite |
+| Priority | Model (enc+dec) | Throughput | Params (enc+dec) | Notes |
+|----------|-----------------|------------|------------------|-------|
+| **Max speed** | MNV4 Small + FPN + ONNX FP32 | 53 img/s | 2.16M | No accuracy risk |
+| **Speed + compact** | RegNetX-004 + FPN + ONNX FP32 | 48 img/s | 5.61M | Solid alternative |
+| **Proven accuracy** | ResNet18 + FPN + ONNX INT8 | 38.5 img/s | 12.05M | INT8 stable on ResNet |
+| **Fine segmentation** | MNV4 Small + UNet + ONNX FP32 | ~45 img/s | 4.31M | More capacity |
 
-### A eviter
+### Avoid
 
-- **RepVGG + INT8** : degradation severe de precision (20-35%)
-- **MobileNetV4 + INT8** : precision incertaine, et FP32 est plus rapide de toute facon
-- **Modeles 3D sur CPU** : 3-5x plus lents que les approches 2D slice-by-slice
+- **RepVGG + INT8**: Severe accuracy degradation (20-35%)
+- **MobileNetV4 + INT8**: Uncertain accuracy, and FP32 is faster anyway
+- **3D models on CPU**: 3-5x slower than 2D slice-by-slice approaches
 
-## Workflow de deploiement recommande
+## Recommended Deployment Workflow
 
 ```
-1. Entrainer MobileNetV4 Small/Medium + FPN (PyTorch)
-2. Exporter vers ONNX (FP32)
-3. Deployer avec ONNX Runtime
-   -> Obtenir ~2x speedup gratuitement !
+1. Train MobileNetV4 Small/Medium + FPN (PyTorch)
+2. Export to ONNX (FP32)
+3. Deploy with ONNX Runtime
+   → Get ~2x speedup for free!
 
-Pas de quantification necessaire.
-Pas de calibration.
-Pas de risque de perte de precision.
+No quantization needed.
+No calibration.
+No risk of accuracy loss.
 ```
 
-## Structure du projet
+## Project Structure
 
 ```
 benchmark_cnn/
-├── README.md                    # Ce fichier
-├── CLAUDE.md                    # Instructions Claude Code
-├── pyproject.toml               # Configuration uv
+├── README.md                    # This file
+├── CLAUDE.md                    # Claude Code instructions
+├── pyproject.toml               # uv configuration
 ├── benchmarks/
-│   ├── encoder_only/            # Benchmark encodeurs seuls
+│   ├── encoder_only/            # Encoder-only benchmark
 │   ├── fpn_decoder/             # Encoder + Semantic FPN
 │   ├── unet_decoder/            # Encoder + UNet
-│   ├── 2d_vs_3d/                # Comparaison 2D vs 3D
-│   ├── combined/                # Comparaison FPN vs UNet
-│   └── quantization/            # Benchmark ONNX FP32/INT8
+│   ├── 2d_vs_3d/                # 2D vs 3D comparison
+│   ├── combined/                # FPN vs UNet comparison
+│   └── quantization/            # ONNX FP32/INT8 benchmark
 └── docs/
-    ├── mobilenetv4_architecture.md  # Details architecture MNV4
-    └── totalsegmentator_stunet.md   # Notes modeles 3D
+    ├── mobilenetv4_architecture.md  # MNV4 architecture details
+    └── totalsegmentator_stunet.md   # 3D model notes
 ```
 
-## Hardware de test
+## Test Hardware
 
-Tous les benchmarks ont ete realises sur:
+All benchmarks were run on:
 
-| Composant | Specification |
+| Component | Specification |
 |-----------|---------------|
 | **CPU** | AMD Ryzen 7 H 255 (Zen 5, Strix Point) |
 | **Cores/Threads** | 8 cores / 16 threads |
-| **Frequence** | 400 MHz - 4.97 GHz |
-| **Cache L3** | 16 MB |
+| **Frequency** | 400 MHz - 4.97 GHz |
+| **L3 Cache** | 16 MB |
 | **RAM** | DDR5 |
 
-> Note: Les performances varieront selon le CPU. Les architectures avec AVX-512 (Intel) ou AVX2 (AMD) beneficieront des optimisations ONNX Runtime.
+> Note: Performance will vary depending on CPU. Architectures with AVX-512 (Intel) or AVX2 (AMD) will benefit from ONNX Runtime optimizations.
 
-## Execution des benchmarks
+## Running Benchmarks
 
 ```bash
-# Installer les dependances
+# Install dependencies
 uv sync
 
-# Benchmark encodeurs seuls
+# Encoder-only benchmark
 uv run benchmarks/encoder_only/benchmark.py
 
-# Benchmark FPN decoder
+# FPN decoder benchmark
 uv run benchmarks/fpn_decoder/benchmark.py
 
-# Benchmark UNet decoder
+# UNet decoder benchmark
 uv run benchmarks/unet_decoder/benchmark.py
 
-# Comparaison 2D vs 3D
+# 2D vs 3D comparison
 uv run benchmarks/2d_vs_3d/benchmark.py
 
-# Benchmark quantification ONNX
+# ONNX quantization benchmark
 uv run benchmarks/quantization/benchmark.py
 ```
 
-## Dependances
+## Dependencies
 
-- `torch >= 2.0` - PyTorch avec torch.compile
-- `timm >= 1.0` - Encodeurs pre-entraines
-- `onnxruntime >= 1.16` - Inference ONNX optimisee
-- `segmentation-models-pytorch` - Decodeurs FPN/UNet (optionnel)
+- `torch >= 2.0` - PyTorch with torch.compile
+- `timm >= 1.0` - Pre-trained encoders
+- `onnxruntime >= 1.16` - Optimized ONNX inference
+- `segmentation-models-pytorch` - FPN/UNet decoders (optional)
 
 ## References
 
-- [MobileNetV4 (ECCV 2024)](https://arxiv.org/abs/2404.10518) - Architecture universelle mobile
-- [STU-Net](https://arxiv.org/abs/2304.06716) - Scalable U-Net pour segmentation medicale
-- [TotalSegmentator](https://github.com/wasserth/TotalSegmentator) - 117 structures anatomiques
-- [nnU-Net](https://github.com/MIC-DKFZ/nnUNet) - Segmentation auto-configuree
+- [MobileNetV4 (ECCV 2024)](https://arxiv.org/abs/2404.10518) - Universal mobile architecture
+- [STU-Net](https://arxiv.org/abs/2304.06716) - Scalable U-Net for medical segmentation
+- [TotalSegmentator](https://github.com/wasserth/TotalSegmentator) - 117 anatomical structures
+- [nnU-Net](https://github.com/MIC-DKFZ/nnUNet) - Auto-configured segmentation
 - [timm](https://github.com/huggingface/pytorch-image-models) - PyTorch Image Models
 
-## Licence
+## License
 
 MIT
