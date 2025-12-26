@@ -189,6 +189,20 @@ benchmark_cnn/
     └── totalsegmentator_stunet.md   # Notes modeles 3D
 ```
 
+## Hardware de test
+
+Tous les benchmarks ont ete realises sur:
+
+| Composant | Specification |
+|-----------|---------------|
+| **CPU** | AMD Ryzen 7 H 255 (Zen 5, Strix Point) |
+| **Cores/Threads** | 8 cores / 16 threads |
+| **Frequence** | 400 MHz - 4.97 GHz |
+| **Cache L3** | 16 MB |
+| **RAM** | DDR5 |
+
+> Note: Les performances varieront selon le CPU. Les architectures avec AVX-512 (Intel) ou AVX2 (AMD) beneficieront des optimisations ONNX Runtime.
+
 ## Execution des benchmarks
 
 ```bash
