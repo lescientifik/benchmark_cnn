@@ -22,31 +22,99 @@ from tabulate import tabulate
 from tqdm import tqdm
 
 
+# Encoders to benchmark - extended set up to ~40M params
 ENCODERS = [
+    # MobileOne family (2M - 10M)
     "mobileone_s0",
     "mobileone_s1",
     "mobileone_s2",
+    "mobileone_s3",
+    # MobileNetV4 family (4M - 33M)
     "mobilenetv4_conv_small.e2400_r224_in1k",
     "mobilenetv4_conv_medium.e500_r224_in1k",
+    "mobilenetv4_conv_large.e600_r384_in1k",
+    # MobileNetV3 family (2.5M - 5.5M)
+    "mobilenetv3_small_100",
+    "mobilenetv3_large_100",
+    # MobileNetV2 family (3.5M - 6M)
+    "mobilenetv2_100",
+    "mobilenetv2_140",
+    # RegNetX family (2.7M - 15M)
     "regnetx_002",
     "regnetx_004",
     "regnetx_008",
+    "regnetx_016",
+    "regnetx_032",
+    # RegNetY family (3M - 11M)
     "regnety_002",
     "regnety_004",
-    "lcnet_100",
-    "lcnet_150",
-    "mobilenetv3_small_100",
-    "mobilenetv3_large_100",
+    "regnety_008",
+    "regnety_016",
+    # ResNet family (12M - 26M)
     "resnet18",
     "resnet34",
-    "repvgg_a0",
-    "repvgg_a1",
+    "resnet50",
+    # EfficientNet family (5M - 9M)
     "efficientnet_b0",
     "efficientnet_b1",
-    "ghostnetv2_100",
+    "efficientnet_b2",
+    # RepVGG family (8M - 25M)
+    "repvgg_a0",
+    "repvgg_a1",
+    "repvgg_a2",
+    "repvgg_b0",
+    # LCNet family (3M - 4.5M)
+    "lcnet_100",
+    "lcnet_150",
+    # TinyNet family (2.5M - 6M)
+    "tinynet_a",
     "tinynet_b",
     "tinynet_c",
+    # EdgeNeXt family (2M - 6M)
+    "edgenext_x_small",
+    "edgenext_small",
+    # ConvNeXt family (29M - 50M)
+    "convnext_tiny",
+    "convnext_small",
+    # GhostNetV2 family (6M - 12M)
+    "ghostnetv2_100",
+    "ghostnetv2_130",
+    "ghostnetv2_160",
+    # DenseNet family (8M - 14M)
+    "densenet121",
+    "densenet169",
+    # PoolFormer family (12M - 21M)
+    "poolformer_s12",
+    "poolformer_s24",
 ]
+
+# Model families for plotting
+MODEL_FAMILIES = {
+    "MobileOne": ["mobileone_s0", "mobileone_s1", "mobileone_s2", "mobileone_s3"],
+    "MobileNetV4": ["mobilenetv4_conv_small.e2400_r224_in1k", "mobilenetv4_conv_medium.e500_r224_in1k", "mobilenetv4_conv_large.e600_r384_in1k"],
+    "MobileNetV3": ["mobilenetv3_small_100", "mobilenetv3_large_100"],
+    "MobileNetV2": ["mobilenetv2_100", "mobilenetv2_140"],
+    "RegNetX": ["regnetx_002", "regnetx_004", "regnetx_008", "regnetx_016", "regnetx_032"],
+    "RegNetY": ["regnety_002", "regnety_004", "regnety_008", "regnety_016"],
+    "ResNet": ["resnet18", "resnet34", "resnet50"],
+    "EfficientNet": ["efficientnet_b0", "efficientnet_b1", "efficientnet_b2"],
+    "RepVGG": ["repvgg_a0", "repvgg_a1", "repvgg_a2", "repvgg_b0"],
+    "LCNet": ["lcnet_100", "lcnet_150"],
+    "TinyNet": ["tinynet_a", "tinynet_b", "tinynet_c"],
+    "EdgeNeXt": ["edgenext_x_small", "edgenext_small"],
+    "ConvNeXt": ["convnext_tiny", "convnext_small"],
+    "GhostNetV2": ["ghostnetv2_100", "ghostnetv2_130", "ghostnetv2_160"],
+    "DenseNet": ["densenet121", "densenet169"],
+    "PoolFormer": ["poolformer_s12", "poolformer_s24"],
+}
+
+
+def get_model_family(model_name):
+    """Get the family name for a model."""
+    for family, models in MODEL_FAMILIES.items():
+        if model_name in models:
+            return family
+    return "Other"
 
 
 class SemanticFPNDecoder(nn.Module):
@@ -281,7 +349,7 @@ def main():
     df.to_csv("benchmark_results.csv", index=False)
     print("\nRésultats sauvegardés")
 
-    # Create plot
+    # Create original plot (keep existing)
     fig, ax = plt.subplots(figsize=(12, 8))
 
     mem_min, mem_max = df["Memory (MB/img)"].min(), df["Memory (MB/img)"].max()
@@ -303,6 +371,7 @@ def main():
             .replace("mobilenetv4_conv_", "mnv4_")
             .replace(".e2400_r224_in1k", "")
             .replace(".e500_r224_in1k", "")
+            .replace(".e600_r384_in1k", "")
         )
         ax.annotate(
             label,
@@ -315,7 +384,7 @@ def main():
 
     ax.set_xlabel("Total Parameters (Millions)", fontsize=12)
     ax.set_ylabel("Throughput (images/second)", fontsize=12)
-    ax.set_title("CPU Throughput: Encoder + Semantic FPN @ 512×512\n(point size = memory, color = encoder params)", fontsize=14)
+    ax.set_title("CPU Throughput: Encoder + Semantic FPN @ 512x512\n(point size = memory, color = encoder params)", fontsize=14)
     ax.grid(True, alpha=0.3)
 
     cbar = plt.colorbar(scatter, ax=ax)
@@ -323,7 +392,96 @@ def main():
 
     plt.tight_layout()
     plt.savefig("benchmark_plot.png", dpi=150)
-    print("Graphique sauvegardé")
+    print("Graphique benchmark_plot.png sauvegardé")
+
+    # NEW: Create scatter plot with model families
+    df["Family"] = df["Encoder"].apply(get_model_family)
+
+    # Color palette for families
+    family_colors = {
+        "MobileOne": "#e41a1c",
+        "MobileNetV4": "#377eb8",
+        "MobileNetV3": "#4daf4a",
+        "MobileNetV2": "#984ea3",
+        "RegNetX": "#ff7f00",
+        "RegNetY": "#ffff33",
+        "ResNet": "#a65628",
+        "EfficientNet": "#f781bf",
+        "RepVGG": "#999999",
+        "LCNet": "#66c2a5",
+        "TinyNet": "#fc8d62",
+        "EdgeNeXt": "#8da0cb",
+        "ConvNeXt": "#e78ac3",
+        "GhostNetV2": "#a6d854",
+        "DenseNet": "#ffd92f",
+        "PoolFormer": "#b3b3b3",
+        "Other": "#000000",
+    }
+
+    fig2, ax2 = plt.subplots(figsize=(14, 10))
+
+    # Normalize memory for point sizes
+    sizes2 = 50 + 400 * (df["Memory (MB/img)"] - mem_min) / (mem_max - mem_min + 1e-6)
+
+    # Plot each family with lines connecting models
+    for family in MODEL_FAMILIES.keys():
+        family_data = df[df["Family"] == family].sort_values("Total Params (M)")
+        if len(family_data) == 0:
+            continue
+
+        color = family_colors.get(family, "#000000")
+        family_sizes = sizes2[family_data.index]
+
+        # Plot points
+        ax2.scatter(
+            family_data["Total Params (M)"],
+            family_data["Throughput (img/s)"],
+            s=family_sizes,
+            c=color,
+            label=family,
+            alpha=0.7,
+            edgecolors="white",
+            linewidths=0.5,
+            zorder=3,
+        )
+
+        # Draw lines connecting models of the same family
+        if len(family_data) > 1:
+            ax2.plot(
+                family_data["Total Params (M)"],
+                family_data["Throughput (img/s)"],
+                c=color,
+                alpha=0.4,
+                linewidth=2,
+                zorder=2,
+            )
+
+    # Add model labels
+    for _, row in df.iterrows():
+        label = (row["Encoder"]
+            .replace("mobilenetv4_conv_", "mnv4_")
+            .replace(".e2400_r224_in1k", "")
+            .replace(".e500_r224_in1k", "")
+            .replace(".e600_r384_in1k", "")
+        )
+        ax2.annotate(
+            label,
+            (row["Total Params (M)"], row["Throughput (img/s)"]),
+            fontsize=6,
+            alpha=0.7,
+            xytext=(3, 3),
+            textcoords="offset points",
+        )
+
+    ax2.set_xlabel("Total Parameters (Millions)", fontsize=12)
+    ax2.set_ylabel("Throughput (images/second)", fontsize=12)
+    ax2.set_title("CPU Throughput: Encoder + Semantic FPN @ 512x512\n(point size = memory, color = model family, lines connect same family)", fontsize=14)
+    ax2.grid(True, alpha=0.3)
+    ax2.legend(loc="upper right", fontsize=8, ncol=2)
+
+    plt.tight_layout()
+    plt.savefig("benchmark_scatter_families.png", dpi=150)
+    print("Graphique benchmark_scatter_families.png sauvegardé")
 
     print("\n" + "=" * 70)
     print("TOP 5 MODÈLES PAR EFFICACITÉ")
